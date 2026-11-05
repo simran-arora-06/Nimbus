@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nimbus — Dynamic Weather Hub</title>
+  
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-theme="sunny">
+
+  <!-- Ambient background glow layers for smooth atmospheric transitions -->
+  <div class="ambient-glow glow-1" aria-hidden="true"></div>
+  <div class="ambient-glow glow-2" aria-hidden="true"></div>
+
+  <!-- Main Application Wrapper -->
+  <main class="app-container">
+    
+    <!-- Header with Branding and Theme Preview Switcher -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">NIMBUS</h1>
+          <span class="brand-tagline">Atmospheric Weather Hub</span>
+        </div>
+      </div>
+
+      <!-- Manual Theme Preview Switcher (From Design Spec for UI Testing) -->
+      <nav class="theme-switcher" aria-label="Theme Preview Switcher">
+        <span class="theme-label">Theme:</span>
+        <button type="button" class="theme-pill" data-theme-target="sunny" title="Preview Sunny theme">
+          ☀️ Sunny
+        </button>
+        <button type="button" class="theme-pill" data-theme-target="rain" title="Preview Rain theme">
+          🌧️ Rain
+        </button>
+        <button type="button" class="theme-pill" data-theme-target="storm" title="Preview Storm theme">
+          ⛈️ Storm
+        </button>
+        <button type="button" class="theme-pill" data-theme-target="snow" title="Preview Snow theme">
+          ❄️ Snow
+        </button>
+        <button type="button" class="theme-pill" data-theme-target="cloudy" title="Preview Cloudy theme">
+          ☁️ Cloudy
+        </button>
+      </nav>
+    </header>
+
+    <!-- Search Section -->
+    <section class="search-section" aria-label="City Search">
+      <form id="search-form" class="search-form" role="search" novalidate>
+        <div class="search-input-wrapper">
+          <span class="search-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </span>
+          <input
+            type="text"
+            id="city-input"
+            class="city-input"
+            placeholder="Search city (e.g., Paris, Tokyo, New York)..."
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button type="button" id="clear-btn" class="clear-btn hidden" aria-label="Clear input">
+            &times;
+          </button>
+        </div>
+        <button type="submit" id="search-btn" class="search-btn">
+          <span>Search</span>
+        </button>
+      </form>
+
+      <!-- Feedback / Notification banner for empty input or network failure -->
+      <div id="status-banner" class="status-banner hidden" role="alert" aria-live="polite"></div>
+    </section>
+
+    <!-- Weather Content Container -->
+    <section id="weather-display" class="weather-display" aria-label="Weather Dashboard">
+      
+      <!-- Loading Skeleton / Spinner State -->
+      <div id="loading-state" class="loading-state hidden">
+        <div class="spinner-ring"></div>
+        <p class="loading-text" id="loading-text">Scanning the atmosphere...</p>
+      </div>
+
+      <!-- Main Weather Dashboard Card -->
+      <div id="weather-card" class="glass-card main-weather-card">
+        
+        <!-- Location & Time Bar -->
+        <div class="weather-top">
+          <div class="location-group">
+            <div class="location-badge">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <h2 id="city-name" class="city-name">Loading...</h2>
+            </div>
+            <span id="country-name" class="country-name"></span>
+          </div>
+          <div class="date-badge">
+            <span id="current-date" class="current-date">--</span>
+          </div>
+        </div>
+
+        <!-- Primary Temperature & Condition Hero -->
+        <div class="weather-hero">
+          <div class="weather-visual">
+            <span id="condition-icon" class="condition-icon" role="img" aria-label="weather icon">☀️</span>
+          </div>
+          <div class="weather-readings">
+            <div class="temp-row">
+              <span id="temperature" class="temperature">--</span>
+              <span class="temp-unit">°C</span>
+            </div>
+            <p id="condition-text" class="condition-text">Clear Sky</p>
+            <div class="temp-range">
+              <span>High: <strong id="temp-max">--°</strong></span>
+              <span class="bullet">•</span>
+              <span>Low: <strong id="temp-min">--°</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Micro Metrics Bento: Humidity & Wind Speed -->
+        <div class="weather-metrics">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-icon" aria-hidden="true">💧</span>
+              <span class="metric-title">Humidity</span>
+            </div>
+            <div class="metric-value">
+              <span id="humidity-value">--</span><span class="metric-unit">%</span>
+            </div>
+            <div class="metric-bar">
+              <div id="humidity-fill" class="metric-bar-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-icon" aria-hidden="true">💨</span>
+              <span class="metric-title">Wind Speed</span>
+            </div>
+            <div class="metric-value">
+              <span id="wind-value">--</span><span class="metric-unit">km/h</span>
+            </div>
+            <span id="wind-description" class="metric-subtitle">Gentle Breeze</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 5-Day Forecast Strip -->
+      <section class="glass-card forecast-section" aria-label="5-Day Forecast">
+        <div class="forecast-header">
+          <h3 class="forecast-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            5-Day Outlook
+          </h3>
+          <span class="forecast-hint">Daily High &amp; Low</span>
+        </div>
+        <div id="forecast-strip" class="forecast-strip">
+          <!-- Dynamically populated by script.js -->
+        </div>
+      </section>
+
+    </section>
+
+  </main>
+
+  <!-- ============================================================ -->
+  <!-- 404 SPACE ERROR SCREEN (Pure CSS Planets & Cosmic Scene)     -->
+  <!-- Shown when geocoding returns no results                      -->
+  <!-- ============================================================ -->
+  <section id="space-screen" class="space-screen hidden" aria-label="City Not Found - Space Page" role="dialog" aria-modal="true">
+    
+    <!-- Background Starfield -->
+    <div class="space-stars stars-layer-1" aria-hidden="true"></div>
+    <div class="space-stars stars-layer-2" aria-hidden="true"></div>
+    <div class="space-stars stars-layer-3" aria-hidden="true"></div>
+    <div class="space-nebula" aria-hidden="true"></div>
+
+    <!-- Pure CSS Celestial Scene (No Images) -->
+    <div class="cosmic-scene" aria-hidden="true">
+      
+      <!-- Planet 1: Saturn with Pure CSS 3D Rings -->
+      <div class="celestial-object saturn-system">
+        <div class="saturn-ring-back"></div>
+        <div class="saturn-body">
+          <div class="saturn-stripes"></div>
+        </div>
+        <div class="saturn-ring-front"></div>
+      </div>
+
+      <!-- Planet 2: Glowing Cratered Terrestrial Planet -->
+      <div class="celestial-object rocky-planet">
+        <div class="planet-crater crater-1"></div>
+        <div class="planet-crater crater-2"></div>
+        <div class="planet-crater crater-3"></div>
+        <div class="planet-atmosphere"></div>
+      </div>
+
+      <!-- Planet 3: Distant Orbiting Moon -->
+      <div class="celestial-object tiny-moon"></div>
+
+      <!-- Shooting Star / Comet -->
+      <div class="shooting-star"></div>
+    </div>
+
+    <!-- Space Error Message Card -->
+    <div class="space-content-card">
+      <span class="space-badge">404 // DEEP SPACE EXPLORER</span>
+      
+      <!-- Exact required question text from prompt -->
+      <h2 class="space-heading">Are you from Earth or from different Universe??</h2>
+      
+      <p class="space-description">
+        We searched every corner of our planetary satellites, but could not find 
+        <strong id="searched-city-display">"..."</strong> on Earth. 
+        Did you discover a new exoplanet?
+      </p>
+
+      <button type="button" id="try-again-btn" class="try-again-btn">
+        <span class="btn-icon" aria-hidden="true">🚀</span>
+        <span>Try again</span>
+      </button>
+    </div>
+
+  </section>
+
+  <!-- Application Logic -->
+  <script src="script.js"></script>
+</body>
+</html>
